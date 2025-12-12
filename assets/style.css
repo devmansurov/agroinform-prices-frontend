@@ -1,0 +1,5 @@
+.text-xs-right {
+  white-space: nowrap;
+  /* To help visualize the fact that the container is too small */
+  width: 10px;
+}
