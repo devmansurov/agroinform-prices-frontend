@@ -70,3 +70,9 @@ Thumbs.db
 
 # Service worker
 sw.*
+
+# Local temporary files
+.local
+
+# Claude Code project instructions
+CLAUDE.md

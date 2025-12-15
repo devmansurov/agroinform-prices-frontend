@@ -13,18 +13,33 @@
                     {{ $t("home") }}
                 </v-btn>
 
-                <v-btn v-if="$store.state.countryId==1" text color="white" :to="localePath('/reports/weekly-report')">
-                  <v-icon class="mr-1"> mdi-calendar-week </v-icon>
-                  {{ $t("weekly_market_report") }}
-                </v-btn>
+                <v-menu v-if="$store.state.countryId==1" offset-y class="mr-5" open-on-hover>
+                    <template v-slot:activator="{ on, attrs }">
+                        <v-btn text color="white" v-bind="attrs" v-on="on">
+                            <v-icon class="mr-1"> mdi-chart-box-plus-outline </v-icon>
+                            {{ $t("market_reports") }}
+                            <v-icon right class="mr-1"> mdi-menu-down </v-icon>
+                        </v-btn>
+                    </template>
+                    <v-list>
+                        <v-list-item key="weekly_report" :to="localePath('/reports/weekly-report')">
+                            <v-list-item-icon>
+                                <v-icon>mdi-calendar-week</v-icon>
+                            </v-list-item-icon>
+                            <v-list-item-title>{{ $t("weekly_market_report") }}</v-list-item-title>
+                        </v-list-item>
+                        <v-list-item key="quarterly_report" :to="localePath('/reports/quarterly-report')">
+                            <v-list-item-icon>
+                                <v-icon>mdi-calendar-month</v-icon>
+                            </v-list-item-icon>
+                            <v-list-item-title>{{ $t("quarterly_market_report") }}</v-list-item-title>
+                        </v-list-item>
+                    </v-list>
+                </v-menu>
 
                 <v-btn text color="white" href= "http://seedprices.agroinform.asia/">
                     <v-icon class="mr-1"> mdi-finance </v-icon>
                     {{ $t("production_prices") }}
-                </v-btn>
-                <v-btn v-if="$store.state.countryId==1" text color="white" :to="localePath('reports')" exact>
-                  <v-icon class="mr-1"> mdi-chart-box-plus-outline </v-icon>
-                  {{ $t("market_reports") }}
                 </v-btn>
                 <v-menu offset-y class="mr-5" open-on-hover>
                     <template v-slot:activator="{ on, attrs }">
