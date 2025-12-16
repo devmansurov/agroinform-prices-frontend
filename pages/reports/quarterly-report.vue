@@ -224,6 +224,44 @@
           </div>
         </section>
 
+        <!-- National Level Economic Indicators Section -->
+        <section v-if="nationalEconomicData && nationalEconomicData.subsections && nationalEconomicData.subsections.length > 0" class="economic-indicators-section">
+          <h2 class="section-title">{{ nationalEconomicData.section_title }}</h2>
+
+          <!-- Inflation Trends Subsection -->
+          <div class="subsection">
+            <h3 class="subsection-title">{{ nationalEconomicData.subsections[0].title }}</h3>
+
+            <!-- Monthly Inflation Chart -->
+            <div v-if="nationalEconomicData.subsections[0].charts && nationalEconomicData.subsections[0].charts[0]" class="inflation-chart-block">
+              <div class="chart-description-container">
+                <p v-if="nationalEconomicData.subsections[0].charts[0].description" class="chart-description">{{ nationalEconomicData.subsections[0].charts[0].description }}</p>
+                <div class="chart-container">
+                  <h4 class="chart-title">{{ nationalEconomicData.subsections[0].charts[0].title }}</h4>
+                  <span class="chart-subtitle-text">{{ nationalEconomicData.subsections[0].charts[0].subtitle }}</span>
+                  <div class="inflation-chart-wrapper">
+                    <canvas ref="monthlyInflationChart"></canvas>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <!-- Annual Inflation Chart -->
+            <div v-if="nationalEconomicData.subsections[0].charts && nationalEconomicData.subsections[0].charts[1]" class="inflation-chart-block annual-chart-block">
+              <div class="chart-description-container">
+                <p v-if="nationalEconomicData.subsections[0].charts[1].description" class="chart-description">{{ nationalEconomicData.subsections[0].charts[1].description }}</p>
+                <div class="chart-container">
+                  <h4 class="chart-title">{{ nationalEconomicData.subsections[0].charts[1].title }}</h4>
+                  <span class="chart-subtitle-text">{{ nationalEconomicData.subsections[0].charts[1].subtitle }}</span>
+                  <div class="inflation-chart-wrapper annual-chart-wrapper">
+                    <canvas ref="annualInflationChart"></canvas>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </section>
+
         <!-- Annex 1: Food Basket Breakdown -->
         <section v-if="annex1Data && annex1Data.table_data && annex1Data.table_data.products" class="annex1-section">
           <h2 class="section-title">{{ $t('annex_1_fb_calculation') }}</h2>
@@ -389,6 +427,7 @@ export default {
       foodBasketRegionData: [],
       foodBasketTrendsData: null,
       wageData: null,
+      nationalEconomicData: null,
       inflationMonthlyData: null,
       inflationAnnualData: null,
       importExportData: null,
@@ -401,7 +440,9 @@ export default {
       foodBasketChart: null,
       foodBasketRegionChart: null,
       fbCostTrendsChart: null,
-      wageRegionalChart: null
+      wageRegionalChart: null,
+      monthlyInflationChart: null,
+      annualInflationChart: null
     };
   },
 
@@ -486,6 +527,16 @@ export default {
         if (newVal && newVal.regional_data && newVal.regional_data.length > 0) {
           this.$nextTick(() => {
             this.renderWageRegionalChart();
+          });
+        }
+      },
+      deep: true
+    },
+    nationalEconomicData: {
+      handler(newVal) {
+        if (newVal && newVal.subsections && newVal.subsections.length > 0) {
+          this.$nextTick(() => {
+            this.renderInflationCharts();
           });
         }
       },
@@ -594,6 +645,7 @@ export default {
           this.foodBasketRegionData = data.food_basket_region || [];
           this.foodBasketTrendsData = data.food_basket_trends;
           this.wageData = data.wage_purchasing_power || null;
+          this.nationalEconomicData = data.national_economic_indicators || null;
           this.inflationMonthlyData = data.inflation_monthly;
           this.inflationAnnualData = data.inflation_annual;
           this.importExportData = data.import_export;
@@ -619,6 +671,7 @@ export default {
       this.foodBasketRegionData = [];
       this.foodBasketTrendsData = null;
       this.wageData = null;
+      this.nationalEconomicData = null;
       this.inflationMonthlyData = null;
       this.inflationAnnualData = null;
       this.importExportData = null;
@@ -1930,6 +1983,291 @@ export default {
           }
         }
       });
+    },
+
+    /**
+     * Render both monthly and annual inflation charts
+     */
+    async renderInflationCharts() {
+      if (!process.client) return;
+
+      await this.$nextTick();
+
+      // Render monthly inflation chart
+      this.renderMonthlyInflationChart();
+
+      // Render annual inflation chart
+      this.renderAnnualInflationChart();
+    },
+
+    /**
+     * Render Monthly Inflation Trends Chart (2-year comparison)
+     */
+    renderMonthlyInflationChart() {
+      if (!this.$refs.monthlyInflationChart) return;
+
+      const data = this.nationalEconomicData;
+      if (!data || !data.subsections || !data.subsections[0] || !data.subsections[0].charts || !data.subsections[0].charts[0]) return;
+
+      const chartInfo = data.subsections[0].charts[0];
+      const chartData = chartInfo.data;
+      if (!chartData || !chartData.data || chartData.data.length === 0) return;
+
+      // Destroy existing chart
+      if (this.monthlyInflationChart) {
+        this.monthlyInflationChart.destroy();
+      }
+
+      const years = chartData.years;
+      const labels = chartData.data.map(d => d.month);
+
+      // Build datasets for each year
+      const datasets = years.map((year, index) => {
+        const isCurrentYear = index === years.length - 1;
+        return {
+          label: String(year),
+          data: chartData.data.map(d => d[year]),
+          borderColor: isCurrentYear ? '#4472C4' : '#4472C4',
+          backgroundColor: isCurrentYear ? '#4472C4' : 'transparent',
+          borderWidth: 2,
+          borderDash: isCurrentYear ? [] : [5, 5],
+          pointRadius: isCurrentYear ? 5 : 3,
+          pointBackgroundColor: isCurrentYear ? '#4472C4' : '#4472C4',
+          pointBorderColor: '#fff',
+          pointBorderWidth: 1,
+          tension: 0.3,
+          fill: false
+        };
+      });
+
+      const ctx = this.$refs.monthlyInflationChart.getContext('2d');
+      this.monthlyInflationChart = new Chart(ctx, {
+        type: 'line',
+        data: {
+          labels: labels,
+          datasets: datasets
+        },
+        options: {
+          responsive: true,
+          maintainAspectRatio: false,
+          interaction: {
+            mode: 'index',
+            intersect: false
+          },
+          plugins: {
+            legend: {
+              display: true,
+              position: 'bottom',
+              labels: {
+                usePointStyle: true,
+                padding: 15,
+                font: { size: 11 }
+              }
+            },
+            tooltip: {
+              callbacks: {
+                label: (context) => {
+                  let label = context.dataset.label || '';
+                  if (label) label += ': ';
+                  if (context.parsed.y !== null) {
+                    label += context.parsed.y.toFixed(2) + '%';
+                  }
+                  return label;
+                }
+              }
+            },
+            datalabels: {
+              display: (context) => {
+                // Only show labels for current year (last dataset) and valid data
+                if (!context.parsed || context.parsed.y === null || context.parsed.y === undefined) {
+                  return false;
+                }
+                return context.datasetIndex === datasets.length - 1;
+              },
+              align: 'top',
+              anchor: 'end',
+              offset: 4,
+              formatter: (value) => {
+                if (value === null || value === undefined) return '';
+                return value.toFixed(1) + '%';
+              },
+              font: { size: 9 },
+              color: '#4472C4'
+            }
+          },
+          scales: {
+            x: {
+              title: { display: false },
+              ticks: { font: { size: 10 } },
+              grid: { display: false }
+            },
+            y: {
+              title: {
+                display: true,
+                text: chartInfo.y_axis_label || 'Monthly inflation, %',
+                font: { size: 11 }
+              },
+              ticks: {
+                callback: (value) => value.toFixed(2) + '%',
+                font: { size: 10 }
+              },
+              grid: { color: 'rgba(0, 0, 0, 0.1)' }
+            }
+          }
+        }
+      });
+    },
+
+    /**
+     * Render Annual Inflation Trends Chart (7-year comparison - bar chart)
+     * Shows annual inflation rate per month, grouped by year
+     */
+    renderAnnualInflationChart() {
+      if (!this.$refs.annualInflationChart) return;
+
+      const data = this.nationalEconomicData;
+      if (!data || !data.subsections || !data.subsections[0] || !data.subsections[0].charts || !data.subsections[0].charts[1]) return;
+
+      const chartInfo = data.subsections[0].charts[1];
+      const chartData = chartInfo.data;
+      if (!chartData || !chartData.data || chartData.data.length === 0) return;
+
+      // Destroy existing chart
+      if (this.annualInflationChart) {
+        this.annualInflationChart.destroy();
+      }
+
+      const years = chartData.years;
+
+      // Build data grouped by year - each year has up to 12 bars (months)
+      const allData = [];
+      const allLabels = [];
+
+      years.forEach(year => {
+        chartData.data.forEach(monthData => {
+          const value = monthData[year];
+          if (value !== null && value !== undefined) {
+            allData.push(value);
+            allLabels.push(`${monthData.month} ${year}`);
+          }
+        });
+      });
+
+      // Calculate min/max from data dynamically
+      const validValues = allData.filter(v => v !== null && v !== undefined);
+      if (validValues.length === 0) return;
+
+      const dataMin = Math.min(...validValues);
+      const dataMax = Math.max(...validValues);
+      // Round to nice values with some padding
+      // For negative values, floor will go more negative (e.g., -1.2 -> -2)
+      const yMin = Math.floor(dataMin - 0.5);
+      const yMax = Math.ceil(dataMax + 0.5);
+
+      console.log('Annual chart - dataMin:', dataMin, 'dataMax:', dataMax, 'yMin:', yMin, 'yMax:', yMax);
+
+      // Calculate year positions for x-axis labels
+      const yearPositions = [];
+      let currentPos = 0;
+      years.forEach(year => {
+        const monthCount = chartData.data.filter(m => m[year] !== null && m[year] !== undefined).length;
+        if (monthCount > 0) {
+          yearPositions.push({
+            year: year,
+            start: currentPos,
+            end: currentPos + monthCount - 1,
+            mid: currentPos + Math.floor(monthCount / 2)
+          });
+          currentPos += monthCount;
+        }
+      });
+
+      const ctx = this.$refs.annualInflationChart.getContext('2d');
+      this.annualInflationChart = new Chart(ctx, {
+        type: 'bar',
+        data: {
+          labels: allLabels,
+          datasets: [{
+            label: 'Annual inflation, %',
+            data: allData,
+            backgroundColor: '#4472C4',
+            borderColor: '#4472C4',
+            borderWidth: 0,
+            barPercentage: 0.85,
+            categoryPercentage: 0.9
+          }]
+        },
+        options: {
+          responsive: true,
+          maintainAspectRatio: false,
+          interaction: {
+            mode: 'index',
+            intersect: false
+          },
+          plugins: {
+            legend: {
+              display: false
+            },
+            tooltip: {
+              callbacks: {
+                title: (items) => {
+                  if (items.length > 0) {
+                    return items[0].label;
+                  }
+                  return '';
+                },
+                label: (context) => {
+                  if (context.parsed.y !== null) {
+                    return 'Annual inflation: ' + context.parsed.y.toFixed(2) + '%';
+                  }
+                  return '';
+                }
+              }
+            },
+            datalabels: {
+              display: false
+            }
+          },
+          scales: {
+            x: {
+              title: { display: false },
+              ticks: {
+                callback: function(value, index) {
+                  // Show year label at the middle of each year's bars
+                  const label = this.getLabelForValue(value);
+                  const yearMatch = label.match(/\d{4}/);
+                  if (yearMatch) {
+                    const year = parseInt(yearMatch[0]);
+                    const pos = yearPositions.find(p => p.year === year);
+                    if (pos && index === pos.mid) {
+                      return year;
+                    }
+                  }
+                  return '';
+                },
+                font: { size: 10 },
+                maxRotation: 0
+              },
+              grid: { display: false }
+            },
+            y: {
+              title: {
+                display: true,
+                text: 'Monthly inflation, %',
+                font: { size: 11 }
+              },
+              min: yMin,
+              max: yMax,
+              ticks: {
+                callback: (value) => value.toFixed(1) + '%',
+                font: { size: 10 },
+                stepSize: 1
+              },
+              grid: { color: 'rgba(0, 0, 0, 0.1)' }
+            }
+          }
+        }
+      });
     }
   },
 
@@ -1951,6 +2289,12 @@ export default {
     }
     if (this.wageRegionalChart) {
       this.wageRegionalChart.destroy();
+    }
+    if (this.monthlyInflationChart) {
+      this.monthlyInflationChart.destroy();
+    }
+    if (this.annualInflationChart) {
+      this.annualInflationChart.destroy();
     }
   }
 };
@@ -2178,6 +2522,7 @@ export default {
 .highlights-section,
 .market-monitoring-section,
 .wage-section,
+.economic-indicators-section,
 .annex1-section,
 .annex2-section {
   background: white;
@@ -2415,6 +2760,104 @@ export default {
 
 .volatile-products-section {
   margin-top: 20px;
+}
+
+/* ============================================================================
+   NATIONAL ECONOMIC INDICATORS SECTION
+   ============================================================================ */
+.economic-indicators-section .subsection {
+  margin-top: 20px;
+}
+
+.economic-indicators-section .subsection-title {
+  font-size: 16px;
+  font-weight: 600;
+  color: #2E75B6;
+  margin-bottom: 16px;
+  padding-bottom: 8px;
+  border-bottom: 2px solid #2E75B6;
+}
+
+.inflation-chart-block {
+  margin-bottom: 16px;
+}
+
+.chart-description-container {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.chart-description-container .chart-description {
+  width: 100%;
+}
+
+.chart-description-container .chart-container {
+  width: 100%;
+}
+
+.economic-indicators-section .chart-description {
+  font-size: 13px;
+  line-height: 1.6;
+  color: #333;
+  padding: 12px;
+  background-color: #f8f9fa;
+  border-left: 3px solid #4472C4;
+  margin: 0;
+}
+
+.economic-indicators-section .chart-container {
+  background: white;
+  border: 1px solid #e0e0e0;
+  border-radius: 4px;
+  padding: 12px;
+  height: fit-content;
+  margin-top: 0;
+}
+
+.economic-indicators-section .chart-title {
+  font-size: 14px;
+  font-weight: 600;
+  color: #2E75B6;
+  text-align: center;
+  margin: 0 0 4px 0;
+}
+
+.economic-indicators-section .chart-subtitle-text {
+  display: block;
+  font-size: 12px;
+  color: #666;
+  text-align: center;
+  margin-bottom: 12px;
+}
+
+.inflation-chart-wrapper {
+  position: relative;
+  height: 250px;
+}
+
+.annual-chart-wrapper {
+  height: 250px;
+}
+
+@media (min-width: 768px) {
+  .inflation-chart-wrapper {
+    height: 280px;
+  }
+
+  .annual-chart-wrapper {
+    height: 280px;
+  }
+}
+
+@media (min-width: 1024px) {
+  .inflation-chart-wrapper {
+    height: 300px;
+  }
+
+  .annual-chart-wrapper {
+    height: 300px;
+  }
 }
 
 /* ============================================================================
