@@ -78,7 +78,7 @@ export default {
   // Axios module configuration: https://go.nuxtjs.dev/config-axios
   axios: {
     baseURL: process.env.NODE_ENV === 'development'
-      ? 'http://backend.test/api' // Local development backend
+      ? 'http://agroinform-prices-backend.test/api' // Local development backend
       : 'https://data.agroinform.asia/api' // Production API
   },
 
@@ -97,10 +97,10 @@ export default {
   },
   publicRuntimeConfig: {
     baseURL: process.env.NODE_ENV === 'development'
-      ? 'http://backend.test' // Local development backend
+      ? 'http://agroinform-prices-backend.test' // Local development backend
       : 'https://data.agroinform.asia', // Production API
     pdfServiceURL: process.env.NODE_ENV === 'development'
-      ? 'http://localhost:3002' // Local PDF service
+      ? 'https://prices.agroinform.asia/api/pdf' // Local PDF service
       : 'https://prices.agroinform.asia/api/pdf' // Production PDF service (via nginx proxy)
   },
 }

@@ -262,6 +262,198 @@
           </div>
         </section>
 
+        <!-- Import and Export of Key Commodities -->
+        <section v-if="importExportData && importExportData.highlight_text" class="import-export-section">
+          <h2 class="section-title">{{ importExportData.title }}</h2>
+
+          <!-- Highlight Text -->
+          <p class="import-export-highlight-text">{{ importExportData.highlight_text }}</p>
+
+          <!-- Import/Export Table -->
+          <div v-if="importExportData.table_data" class="import-export-table-wrapper">
+            <table class="import-export-table">
+              <thead>
+                <tr>
+                  <th rowspan="2"></th>
+                  <th>{{ $t('cur_month') }}</th>
+                  <th>{{ $t('last_month') }}</th>
+                  <th>{{ $t('changes') }}</th>
+                  <th>{{ $t('cur_quarter') }}</th>
+                  <th>{{ $t('three_months_ago') }}</th>
+                  <th>{{ $t('changes') }}</th>
+                  <th>{{ $t('one_year_ago') }}</th>
+                  <th>{{ $t('changes') }}</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr v-for="(row, index) in importExportData.table_data.rows" :key="index">
+                  <td class="indicator-cell">{{ $t('import_export_' + row.indicator) }}</td>
+                  <td>{{ formatImportExportValue(row.indicator, row.cur_month) }}</td>
+                  <td>{{ formatImportExportValue(row.indicator, row.last_month) }}</td>
+                  <td :class="getImportExportChangeClass(row.mom_change)">{{ formatImportExportChange(row.mom_change) }}</td>
+                  <td>{{ formatImportExportValue(row.indicator, row.cur_quarter) }}</td>
+                  <td>{{ formatImportExportValue(row.indicator, row.three_months_ago) }}</td>
+                  <td :class="getImportExportChangeClass(row.qoq_change)">{{ formatImportExportChange(row.qoq_change) }}</td>
+                  <td>{{ formatImportExportValue(row.indicator, row.one_year_ago) }}</td>
+                  <td :class="getImportExportChangeClass(row.yoy_change)">{{ formatImportExportChange(row.yoy_change) }}</td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+        </section>
+
+        <!-- Changes in Imports of Key Commodities -->
+        <section v-if="hasImportChangesData" class="import-changes-section">
+          <h2 class="section-title">{{ importChangesData.title }}: <span class="period-highlight">{{ importChangesData.period_label }}</span></h2>
+
+          <div class="import-changes-table-wrapper">
+            <table class="import-changes-table">
+              <thead>
+                <tr>
+                  <th rowspan="3" class="col-no">{{ $t('no') }}</th>
+                  <th rowspan="3" class="col-item">{{ $t('item') }}</th>
+                  <th colspan="2" class="col-group">{{ $t('cur_quarter') }}</th>
+                  <th colspan="4" class="col-group">{{ $t('three_months_ago') }}</th>
+                  <th colspan="4" class="col-group">{{ $t('one_year_ago') }}</th>
+                </tr>
+                <tr>
+                  <th rowspan="2" class="col-qty">{{ $t('quantity_short') }}</th>
+                  <th rowspan="2" class="col-amt">{{ $t('amount_short') }}</th>
+                  <th colspan="2" class="col-subgroup">{{ $t('quantity_short') }}</th>
+                  <th colspan="2" class="col-subgroup">{{ $t('amount_short') }}</th>
+                  <th colspan="2" class="col-subgroup">{{ $t('quantity_short') }}</th>
+                  <th colspan="2" class="col-subgroup">{{ $t('amount_short') }}</th>
+                </tr>
+                <tr>
+                  <th class="col-unit">{{ $t('tmt') }}</th>
+                  <th class="col-percent">%</th>
+                  <th class="col-unit">{{ $t('mln_usd') }}</th>
+                  <th class="col-percent">%</th>
+                  <th class="col-unit">{{ $t('tmt') }}</th>
+                  <th class="col-percent">%</th>
+                  <th class="col-unit">{{ $t('mln_usd') }}</th>
+                  <th class="col-percent">%</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr v-for="row in importChangesData.table_data.rows" :key="row.commodity_key">
+                  <td class="text-center">{{ row.no }}</td>
+                  <td class="col-item-name">{{ $t('commodity_' + row.commodity_key) }}</td>
+                  <td class="text-right">{{ formatNumber(row.cur_qty) }}</td>
+                  <td class="text-right">{{ formatNumber(row.cur_amt) }}</td>
+                  <td class="text-right">{{ formatNumber(row.three_months_qty) }}</td>
+                  <td class="text-right" :class="getImportChangeClass(row.three_months_qty_change)">{{ formatImportChangePercent(row.three_months_qty_change) }}</td>
+                  <td class="text-right">{{ formatNumber(row.three_months_amt) }}</td>
+                  <td class="text-right" :class="getImportChangeClass(row.three_months_amt_change)">{{ formatImportChangePercent(row.three_months_amt_change) }}</td>
+                  <td class="text-right">{{ formatNumber(row.one_year_qty) }}</td>
+                  <td class="text-right" :class="getImportChangeClass(row.one_year_qty_change)">{{ formatImportChangePercent(row.one_year_qty_change) }}</td>
+                  <td class="text-right">{{ formatNumber(row.one_year_amt) }}</td>
+                  <td class="text-right" :class="getImportChangeClass(row.one_year_amt_change)">{{ formatImportChangePercent(row.one_year_amt_change) }}</td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+
+          <p class="tmt-abbreviation">* {{ $t('tmt_abbreviation') }}</p>
+
+          <!-- Import Changes Chart - Quantity (TMT) -->
+          <div v-if="importChangesData.table_data.rows && importChangesData.table_data.rows.length > 0" class="import-changes-chart-section">
+            <import-changes-chart
+              :chartData="importChangesData.table_data.rows"
+              dataType="quantity"
+              :locale="$i18n.locale"
+              :title="importChangesData.title + ': ' + importChangesData.period_label + ', ' + $t('tmt') + '*'"
+            />
+          </div>
+
+          <!-- Import Changes Chart - Amount (mln. USD) -->
+          <div v-if="importChangesData.table_data.rows && importChangesData.table_data.rows.length > 0" class="import-changes-chart-section">
+            <import-changes-chart
+              :chartData="importChangesData.table_data.rows"
+              dataType="amount"
+              :locale="$i18n.locale"
+              :title="importChangesData.title + ': ' + importChangesData.period_label + ', ' + $t('mln_usd') + '*'"
+            />
+          </div>
+        </section>
+
+        <!-- Changes in Exports of Key Commodities -->
+        <section v-if="hasExportChangesData" class="export-changes-section">
+          <h2 class="section-title">{{ exportChangesData.title }}: <span class="period-highlight">{{ exportChangesData.period_label }}</span></h2>
+
+          <div class="export-changes-table-wrapper">
+            <table class="export-changes-table">
+              <thead>
+                <tr>
+                  <th rowspan="3" class="col-no">{{ $t('no') }}</th>
+                  <th rowspan="3" class="col-item">{{ $t('item') }}</th>
+                  <th colspan="2" class="col-group">{{ $t('cur_quarter') }}</th>
+                  <th colspan="4" class="col-group">{{ $t('three_months_ago') }}</th>
+                  <th colspan="4" class="col-group">{{ $t('one_year_ago') }}</th>
+                </tr>
+                <tr>
+                  <th rowspan="2" class="col-qty">{{ $t('quantity_short') }}</th>
+                  <th rowspan="2" class="col-amt">{{ $t('amount_short') }}</th>
+                  <th colspan="2" class="col-subgroup">{{ $t('quantity_short') }}</th>
+                  <th colspan="2" class="col-subgroup">{{ $t('amount_short') }}</th>
+                  <th colspan="2" class="col-subgroup">{{ $t('quantity_short') }}</th>
+                  <th colspan="2" class="col-subgroup">{{ $t('amount_short') }}</th>
+                </tr>
+                <tr>
+                  <th class="col-unit">{{ $t('tmt') }}</th>
+                  <th class="col-percent">%</th>
+                  <th class="col-unit">{{ $t('mln_usd') }}</th>
+                  <th class="col-percent">%</th>
+                  <th class="col-unit">{{ $t('tmt') }}</th>
+                  <th class="col-percent">%</th>
+                  <th class="col-unit">{{ $t('mln_usd') }}</th>
+                  <th class="col-percent">%</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr v-for="row in exportChangesData.table_data.rows" :key="row.commodity_key">
+                  <td class="text-center">{{ row.no }}</td>
+                  <td class="col-item-name">{{ $t('commodity_export_' + row.commodity_key) }}</td>
+                  <td class="text-right">{{ formatNumber(row.cur_qty) }}</td>
+                  <td class="text-right">{{ formatNumber(row.cur_amt) }}</td>
+                  <td class="text-right">{{ formatNumber(row.three_months_qty) }}</td>
+                  <td class="text-right" :class="getImportChangeClass(row.three_months_qty_change)">{{ formatImportChangePercent(row.three_months_qty_change) }}</td>
+                  <td class="text-right">{{ formatNumber(row.three_months_amt) }}</td>
+                  <td class="text-right" :class="getImportChangeClass(row.three_months_amt_change)">{{ formatImportChangePercent(row.three_months_amt_change) }}</td>
+                  <td class="text-right">{{ formatNumber(row.one_year_qty) }}</td>
+                  <td class="text-right" :class="getImportChangeClass(row.one_year_qty_change)">{{ formatImportChangePercent(row.one_year_qty_change) }}</td>
+                  <td class="text-right">{{ formatNumber(row.one_year_amt) }}</td>
+                  <td class="text-right" :class="getImportChangeClass(row.one_year_amt_change)">{{ formatImportChangePercent(row.one_year_amt_change) }}</td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+
+          <p class="tmt-abbreviation">* {{ $t('tmt_abbreviation') }}</p>
+
+          <!-- Export Changes Chart - Quantity (TMT) -->
+          <div v-if="exportChangesData.table_data.rows && exportChangesData.table_data.rows.length > 0" class="export-changes-chart-section">
+            <import-changes-chart
+              :chartData="exportChangesData.table_data.rows"
+              dataType="quantity"
+              :locale="$i18n.locale"
+              :title="exportChangesData.title + ': ' + exportChangesData.period_label + ', ' + $t('tmt') + '*'"
+              translationPrefix="commodity_export_"
+            />
+          </div>
+
+          <!-- Export Changes Chart - Amount (mln. USD) -->
+          <div v-if="exportChangesData.table_data.rows && exportChangesData.table_data.rows.length > 0" class="export-changes-chart-section">
+            <import-changes-chart
+              :chartData="exportChangesData.table_data.rows"
+              dataType="amount"
+              :locale="$i18n.locale"
+              :title="exportChangesData.title + ': ' + exportChangesData.period_label + ', ' + $t('mln_usd') + '*'"
+              translationPrefix="commodity_export_"
+            />
+          </div>
+        </section>
+
         <!-- Annex 1: Food Basket Breakdown -->
         <section v-if="annex1Data && annex1Data.table_data && annex1Data.table_data.products" class="annex1-section">
           <h2 class="section-title">{{ $t('annex_1_fb_calculation') }}</h2>
@@ -282,18 +474,6 @@
         <!-- Annex 2: Changes in Retail Prices -->
         <section v-if="annex2Data && annex2Data.length > 0" class="annex2-section">
           <h2 class="section-title">{{ $t('annex_2_price_changes') }}</h2>
-
-          <div class="annex2-legend">
-            <span class="legend-item">
-              <span class="trend-icon increase">▲</span> {{ $t('annex2_increase_label') || 'Increase when % > 5' }}
-            </span>
-            <span class="legend-item">
-              <span class="trend-icon decrease">▼</span> {{ $t('annex2_decrease_label') || 'Decrease when % < -5' }}
-            </span>
-            <span class="legend-item">
-              <span class="trend-icon stable">▶</span> {{ $t('annex2_stable_label') || 'Stable when % between 5 and -5' }}
-            </span>
-          </div>
 
           <div class="table-wrapper">
             <table class="annex2-table">
@@ -348,6 +528,21 @@
               </tbody>
             </table>
           </div>
+
+          <div class="annex2-legend-wrapper">
+            <p class="annex2-legend-title">{{ $t('annex2_legend_title') }}</p>
+            <div class="annex2-legend">
+              <span class="legend-item">
+                <span class="trend-icon increase">▲</span> {{ $t('annex2_increase_label') || 'Increase when % > 5' }}
+              </span>
+              <span class="legend-item">
+                <span class="trend-icon decrease">▼</span> {{ $t('annex2_decrease_label') || 'Decrease when % < -5' }}
+              </span>
+              <span class="legend-item">
+                <span class="trend-icon stable">▶</span> {{ $t('annex2_stable_label') || 'Stable when % between 5 and -5' }}
+              </span>
+            </div>
+          </div>
         </section>
       </div>
 
@@ -377,6 +572,7 @@
 import QuarterlyFoodBasketTrendsChart from '~/components/QuarterlyFoodBasketTrendsChart.vue';
 import FoodBasketBreakdownTable from '~/components/FoodBasketBreakdownTable.vue';
 import FoodBasketBreakdownChart from '~/components/FoodBasketBreakdownChart.vue';
+import ImportChangesChart from '~/components/ImportChangesChart.vue';
 import { Chart, registerables } from 'chart.js';
 
 if (process.client) {
@@ -389,7 +585,8 @@ export default {
   components: {
     QuarterlyFoodBasketTrendsChart,
     FoodBasketBreakdownTable,
-    FoodBasketBreakdownChart
+    FoodBasketBreakdownChart,
+    ImportChangesChart
   },
 
   layout: 'clean',
@@ -431,6 +628,8 @@ export default {
       inflationMonthlyData: null,
       inflationAnnualData: null,
       importExportData: null,
+      importChangesData: null,
+      exportChangesData: null,
       annex1Data: null,
       annex2Data: [],
 
@@ -460,6 +659,20 @@ export default {
 
     isFilterValid() {
       return this.selectedYear && this.selectedQuarter;
+    },
+
+    hasImportChangesData() {
+      if (!this.importChangesData?.table_data?.rows) return false;
+      return this.importChangesData.table_data.rows.some(
+        row => row.cur_qty > 0 || row.cur_amt > 0
+      );
+    },
+
+    hasExportChangesData() {
+      if (!this.exportChangesData?.table_data?.rows) return false;
+      return this.exportChangesData.table_data.rows.some(
+        row => row.cur_qty > 0 || row.cur_amt > 0
+      );
     }
   },
 
@@ -649,6 +862,8 @@ export default {
           this.inflationMonthlyData = data.inflation_monthly;
           this.inflationAnnualData = data.inflation_annual;
           this.importExportData = data.import_export;
+          this.importChangesData = data.import_changes || null;
+          this.exportChangesData = data.export_changes || null;
           this.annex1Data = data.annex1_food_basket || null;
           this.annex2Data = data.annex2_price_changes || [];
         }
@@ -675,6 +890,8 @@ export default {
       this.inflationMonthlyData = null;
       this.inflationAnnualData = null;
       this.importExportData = null;
+      this.importChangesData = null;
+      this.exportChangesData = null;
       this.annex1Data = null;
       this.annex2Data = [];
     },
@@ -2268,6 +2485,45 @@ export default {
           }
         }
       });
+    },
+
+    // Import/Export helper methods
+    formatImportExportValue(indicator, value) {
+      if (value === null || value === undefined) return '-';
+      if (indicator === 'terms_of_trade') {
+        return value + '%';
+      }
+      return value.toLocaleString('en-US', { minimumFractionDigits: 1, maximumFractionDigits: 1 });
+    },
+
+    formatImportExportChange(change) {
+      if (change === null || change === undefined) return '-';
+      return change + '%';
+    },
+
+    getImportExportChangeClass(change) {
+      if (change === null || change === undefined) return '';
+      if (change > 0) return 'positive-change';
+      if (change < 0) return 'negative-change';
+      return '';
+    },
+
+    // Import Changes Table Methods
+    formatNumber(value) {
+      if (value === null || value === undefined) return '-';
+      return parseFloat(value).toLocaleString('en-US', { minimumFractionDigits: 1, maximumFractionDigits: 2 });
+    },
+
+    formatImportChangePercent(change) {
+      if (change === null || change === undefined) return '-';
+      return change + '%';
+    },
+
+    getImportChangeClass(change) {
+      if (change === null || change === undefined) return '';
+      if (change > 0) return 'import-positive';
+      if (change < 0) return 'import-negative';
+      return '';
     }
   },
 
@@ -2523,6 +2779,7 @@ export default {
 .market-monitoring-section,
 .wage-section,
 .economic-indicators-section,
+.import-export-section,
 .annex1-section,
 .annex2-section {
   background: white;
@@ -2530,12 +2787,294 @@ export default {
   margin-bottom: 16px;
 }
 
+/* Import/Export Section Styles */
+.import-export-highlight-text {
+  font-size: 14px;
+  line-height: 1.6;
+  color: #333;
+  margin-bottom: 20px;
+  text-align: justify;
+}
+
+.import-export-table-wrapper {
+  overflow-x: auto;
+}
+
+.import-export-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 13px;
+  background: white;
+}
+
+.import-export-table th,
+.import-export-table td {
+  border: 1px solid #dee2e6;
+  padding: 10px 12px;
+  text-align: center;
+  vertical-align: middle;
+}
+
+.import-export-table thead th {
+  background-color: #007dbc;
+  color: white;
+  font-weight: bold;
+  white-space: nowrap;
+}
+
+.import-export-table tbody td:first-child {
+  text-align: left;
+  font-weight: 500;
+}
+
+.import-export-table tbody tr:hover {
+  background-color: #f8f9fa;
+}
+
+.import-export-table .positive-change {
+  color: #28a745;
+  font-weight: 600;
+}
+
+.import-export-table .negative-change {
+  color: #dc3545;
+  font-weight: 600;
+}
+
+/* Import Changes Section Styles */
+.import-changes-section {
+  margin-top: 30px;
+}
+
+.import-changes-section .section-title {
+  color: #333;
+  border-bottom: 2px solid #007dbc;
+  padding-bottom: 8px;
+  margin-bottom: 20px;
+}
+
+.import-changes-section .period-highlight {
+  color: #007dbc;
+  font-weight: 700;
+}
+
+.import-changes-table-wrapper {
+  overflow-x: auto;
+}
+
+.import-changes-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 13px;
+  background: white;
+}
+
+.import-changes-table th,
+.import-changes-table td {
+  border: 1px solid #dee2e6;
+  padding: 8px 10px;
+  text-align: center;
+  vertical-align: middle;
+}
+
+.import-changes-table thead th {
+  background-color: #007dbc;
+  color: white;
+  font-weight: bold;
+}
+
+.import-changes-table thead th.col-group {
+  background-color: #005a8a;
+}
+
+.import-changes-table thead th.col-subgroup {
+  background-color: #007dbc;
+}
+
+.import-changes-table .col-no {
+  width: 40px;
+}
+
+.import-changes-table .col-item,
+.import-changes-table .col-item-name {
+  text-align: left;
+  min-width: 150px;
+}
+
+.import-changes-table .col-qty,
+.import-changes-table .col-amt,
+.import-changes-table .col-unit {
+  min-width: 60px;
+}
+
+.import-changes-table .col-percent {
+  min-width: 50px;
+}
+
+.import-changes-table tbody tr:nth-child(odd) {
+  background-color: #f9f9f9;
+}
+
+.import-changes-table tbody tr:hover {
+  background-color: #e8f4fc;
+}
+
+.import-changes-table .import-positive {
+  color: #28a745;
+  font-weight: 600;
+}
+
+.import-changes-table .import-negative {
+  color: #dc3545;
+  font-weight: 600;
+}
+
+.import-changes-table .text-right {
+  text-align: right;
+}
+
+.import-changes-table .text-center {
+  text-align: center;
+}
+
+.import-changes-chart-section {
+  margin-top: 30px;
+  padding: 20px;
+  background: #fafafa;
+  border-radius: 8px;
+}
+
+.tmt-abbreviation {
+  font-size: 12px;
+  color: #666;
+  margin: 25px 0 0 0;
+  font-style: italic;
+}
+
+.tmt-abbreviation + .import-changes-chart-section,
+.tmt-abbreviation + .export-changes-chart-section {
+  margin-top: 10px;
+}
+
+/* Export Changes Section Styles */
+.export-changes-section {
+  margin-top: 30px;
+}
+
+.export-changes-section .section-title {
+  color: #333;
+  border-bottom: 2px solid #2E75B6;
+  padding-bottom: 8px;
+  margin-bottom: 20px;
+}
+
+.export-changes-section .period-highlight {
+  color: #2E75B6;
+  font-weight: 700;
+}
+
+.export-changes-table-wrapper {
+  overflow-x: auto;
+}
+
+.export-changes-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 13px;
+  background: white;
+}
+
+.export-changes-table th,
+.export-changes-table td {
+  border: 1px solid #dee2e6;
+  padding: 8px 10px;
+  text-align: center;
+  vertical-align: middle;
+}
+
+.export-changes-table thead th {
+  background-color: #2E75B6;
+  color: white;
+  font-weight: bold;
+}
+
+.export-changes-table thead th.col-group {
+  background-color: #1F5C8E;
+}
+
+.export-changes-table thead th.col-subgroup {
+  background-color: #2E75B6;
+}
+
+.export-changes-table .col-no {
+  width: 40px;
+}
+
+.export-changes-table .col-item,
+.export-changes-table .col-item-name {
+  text-align: left;
+  min-width: 150px;
+}
+
+.export-changes-table .col-qty,
+.export-changes-table .col-amt,
+.export-changes-table .col-unit {
+  min-width: 60px;
+}
+
+.export-changes-table .col-percent {
+  min-width: 50px;
+}
+
+.export-changes-table tbody tr:nth-child(odd) {
+  background-color: #f9f9f9;
+}
+
+.export-changes-table tbody tr:hover {
+  background-color: #e8f4fc;
+}
+
+.export-changes-table .import-positive {
+  color: #28a745;
+  font-weight: 600;
+}
+
+.export-changes-table .import-negative {
+  color: #dc3545;
+  font-weight: 600;
+}
+
+.export-changes-table .text-right {
+  text-align: right;
+}
+
+.export-changes-table .text-center {
+  text-align: center;
+}
+
+.export-changes-chart-section {
+  margin-top: 30px;
+  padding: 20px;
+  background: #fafafa;
+  border-radius: 8px;
+}
+
 /* Annex 2 Styles */
+.annex2-legend-wrapper {
+  margin-top: 20px;
+}
+
+.annex2-legend-title {
+  font-size: 13px;
+  font-weight: 600;
+  color: #333;
+  margin: 0 0 10px 0;
+}
+
 .annex2-legend {
   display: flex;
   flex-wrap: wrap;
   gap: 20px;
-  margin-bottom: 16px;
   font-size: 12px;
 }
 
