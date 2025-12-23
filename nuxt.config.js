@@ -97,8 +97,8 @@ export default {
   },
   publicRuntimeConfig: {
     baseURL: process.env.NODE_ENV === 'development'
-      ? 'http://agroinform-prices-backend.test' // Local development backend
-      : 'https://data.agroinform.asia', // Production API
+      ? 'http://agroinform-prices-backend.test/api' // Local development backend
+      : 'https://data.agroinform.asia/api', // Production API
     pdfServiceURL: process.env.NODE_ENV === 'development'
       ? 'https://prices.agroinform.asia/api/pdf' // Local PDF service
       : 'https://prices.agroinform.asia/api/pdf' // Production PDF service (via nginx proxy)
