@@ -564,6 +564,55 @@
           </v-btn>
         </template>
       </v-snackbar>
+
+      <!-- Success Notification -->
+      <v-snackbar
+        v-model="pdfSuccess"
+        :timeout="3000"
+        color="success"
+        top
+      >
+        {{ pdfSuccessMsg }}
+        <template v-slot:action="{ attrs }">
+          <v-btn
+            text
+            v-bind="attrs"
+            @click="pdfSuccess = false"
+          >
+            {{ $t('close') }}
+          </v-btn>
+        </template>
+      </v-snackbar>
+
+      <!-- PDF Download Button - Fixed Bottom Right (only show if PDF service is healthy) -->
+      <v-tooltip v-if="pdfServiceHealthy" left>
+        <template v-slot:activator="{ on, attrs }">
+          <v-btn
+            fab
+            fixed
+            bottom
+            right
+            color="red darken-2"
+            dark
+            large
+            :disabled="isPdfButtonDisabled && !generatingPdf"
+            @click="downloadPdfReport"
+            class="pdf-download-btn"
+            v-bind="attrs"
+            v-on="on"
+          >
+            <v-progress-circular
+              v-if="generatingPdf"
+              indeterminate
+              color="white"
+              :size="28"
+              :width="3"
+            ></v-progress-circular>
+            <v-icon v-else>mdi-file-pdf-box</v-icon>
+          </v-btn>
+        </template>
+        <span>{{ generatingPdf ? $t('generating_pdf') : (isPdfButtonDisabled ? $t('pdf_not_available') : $t('download_pdf')) }}</span>
+      </v-tooltip>
     </div>
   </div>
 </template>
@@ -641,7 +690,15 @@ export default {
       fbCostTrendsChart: null,
       wageRegionalChart: null,
       monthlyInflationChart: null,
-      annualInflationChart: null
+      annualInflationChart: null,
+
+      // PDF Generation State
+      generatingPdf: false,
+      pdfError: false,
+      pdfErrorMsg: '',
+      pdfSuccess: false,
+      pdfSuccessMsg: '',
+      pdfServiceHealthy: false
     };
   },
 
@@ -673,6 +730,16 @@ export default {
       return this.exportChangesData.table_data.rows.some(
         row => row.cur_qty > 0 || row.cur_amt > 0
       );
+    },
+
+    isPdfButtonDisabled() {
+      // Disable PDF button if:
+      // 1. Report data not loaded yet
+      // 2. Currently generating PDF
+      // 3. Filters not valid
+      return !this.highlightsData.length ||
+             this.generatingPdf ||
+             !this.isFilterValid;
     }
   },
 
@@ -682,6 +749,8 @@ export default {
       this.$store.commit('setCountryID', countryId);
       await this.fetchAvailableFilters();
     }
+    // Check PDF service health
+    this.checkPdfServiceHealth();
   },
 
   watch: {
@@ -900,6 +969,89 @@ export default {
       this.selectedYear = null;
       this.selectedQuarter = null;
       this.clearAllData();
+    },
+
+    async checkPdfServiceHealth() {
+      try {
+        const response = await this.$axios.get(`${this.$config.pdfServiceURL}/health`, {
+          timeout: 5000 // 5 second timeout
+        });
+        this.pdfServiceHealthy = response.data?.status === 'ok';
+      } catch (error) {
+        console.warn('PDF service health check failed:', error.message);
+        this.pdfServiceHealthy = false;
+      }
+    },
+
+    async downloadPdfReport() {
+      // Reset previous errors and success messages
+      this.pdfError = false;
+      this.pdfErrorMsg = '';
+      this.pdfSuccess = false;
+      this.pdfSuccessMsg = '';
+      this.generatingPdf = true;
+
+      try {
+        // Prepare payload for quarterly report PDF
+        const payload = {
+          year: this.selectedYear,
+          quarter: this.selectedQuarter,
+          locale: this.$i18n.locale,
+          page: 'all'  // Always generate full report
+        };
+
+        // Call PDF service API for quarterly report
+        const response = await this.$axios.post(
+          `${this.$config.pdfServiceURL}/reports/quarterly`,
+          payload
+        );
+
+        if (response.status === 200 && response.data.success) {
+          // Construct full download URL
+          const downloadUrl = `${this.$config.pdfServiceURL}${response.data.url}&locale=${this.$i18n.locale}&year=${this.selectedYear}&quarter=${this.selectedQuarter}&page=all`;
+
+          // Download PDF file
+          const link = document.createElement('a');
+          link.href = downloadUrl;
+          link.download = response.data.filename || `quarterly-report-${this.$i18n.locale}-${this.selectedYear}-q${this.selectedQuarter}.pdf`;
+          document.body.appendChild(link);
+          link.click();
+          document.body.removeChild(link);
+
+          // Show success message
+          this.pdfSuccess = true;
+          this.pdfSuccessMsg = this.$t('pdf_generated_successfully');
+          setTimeout(() => {
+            this.pdfSuccess = false;
+          }, 3000);
+
+        } else {
+          throw new Error('PDF generation failed');
+        }
+
+      } catch (error) {
+        // Show error message - use error code for translation if available
+        this.pdfError = true;
+        const errorCode = error.response?.data?.code;
+        if (errorCode) {
+          // Try to get translated error message using error code
+          const translationKey = `pdf_error_${errorCode}`;
+          this.pdfErrorMsg = this.$t(translationKey);
+        } else {
+          this.pdfErrorMsg = this.$t('pdf_generation_failed');
+        }
+        this.axiosError = true;
+        this.axiosErrorMsg = this.pdfErrorMsg;
+
+        // Auto-hide error after 5 seconds
+        setTimeout(() => {
+          this.pdfError = false;
+          this.axiosError = false;
+        }, 5000);
+
+      } finally {
+        this.generatingPdf = false;
+      }
     },
 
     formatPrice(price) {
@@ -3727,6 +3879,28 @@ export default {
   /* Full Width Content */
   .full-width-content {
     padding: 0 16px;
+  }
+}
+
+/* ============================================================================
+   PDF DOWNLOAD BUTTON
+   ============================================================================ */
+.pdf-download-btn {
+  z-index: 100;
+  margin-bottom: 20px;
+  margin-right: 20px;
+}
+
+@media (max-width: 768px) {
+  .pdf-download-btn {
+    margin-bottom: 16px;
+    margin-right: 16px;
+  }
+}
+
+@media print {
+  .pdf-download-btn {
+    display: none !important;
   }
 }
 </style>

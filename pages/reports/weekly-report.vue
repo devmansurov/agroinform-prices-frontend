@@ -813,29 +813,35 @@
         </template>
       </v-snackbar>
 
-      <!-- PDF Download Button - Fixed Bottom Right -->
-      <v-btn
-        fab
-        fixed
-        bottom
-        right
-        color="#ca5216"
-        dark
-        large
-        :disabled="isPdfButtonDisabled && !generatingPdf"
-        @click="downloadPdfReport"
-        class="pdf-download-btn"
-        :title="isPdfButtonDisabled ? $t('pdf_not_available') : $t('download_pdf')"
-      >
-        <v-progress-circular
-          v-if="generatingPdf"
-          indeterminate
-          color="white"
-          :size="28"
-          :width="3"
-        ></v-progress-circular>
-        <v-icon v-else>mdi-file-pdf-box</v-icon>
-      </v-btn>
+      <!-- PDF Download Button - Fixed Bottom Right (only show if PDF service is healthy) -->
+      <v-tooltip v-if="pdfServiceHealthy" left>
+        <template v-slot:activator="{ on, attrs }">
+          <v-btn
+            fab
+            fixed
+            bottom
+            right
+            color="#ca5216"
+            dark
+            large
+            :disabled="isPdfButtonDisabled && !generatingPdf"
+            @click="downloadPdfReport"
+            class="pdf-download-btn"
+            v-bind="attrs"
+            v-on="on"
+          >
+            <v-progress-circular
+              v-if="generatingPdf"
+              indeterminate
+              color="white"
+              :size="28"
+              :width="3"
+            ></v-progress-circular>
+            <v-icon v-else>mdi-file-pdf-box</v-icon>
+          </v-btn>
+        </template>
+        <span>{{ generatingPdf ? $t('generating_pdf') : (isPdfButtonDisabled ? $t('pdf_not_available') : $t('download_pdf')) }}</span>
+      </v-tooltip>
     </div>
   </div>
 </template>
@@ -931,7 +937,8 @@ export default {
       pdfError: false,
       pdfErrorMsg: '',
       pdfSuccess: false,
-      pdfSuccessMsg: ''
+      pdfSuccessMsg: '',
+      pdfServiceHealthy: false
     };
   },
 
@@ -1133,6 +1140,8 @@ export default {
         this.fetchAvailableYears();
       }
     }
+    // Check PDF service health
+    this.checkPdfServiceHealth();
   },
 
   methods: {
@@ -1140,6 +1149,18 @@ export default {
       if (this.$store.state.countryId == 1) return this.$t('tajikistan_menu');
       else if (this.$store.state.countryId == 2) return this.$t('kyrgyzstan');
       else return '';
+    },
+
+    async checkPdfServiceHealth() {
+      try {
+        const response = await this.$axios.get(`${this.$config.pdfServiceURL}/health`, {
+          timeout: 5000 // 5 second timeout
+        });
+        this.pdfServiceHealthy = response.data?.status === 'ok';
+      } catch (error) {
+        console.warn('PDF service health check failed:', error.message);
+        this.pdfServiceHealthy = false;
+      }
     },
 
     async downloadPdfReport() {
@@ -1163,7 +1184,7 @@ export default {
 
         // Call PDF service API
         const response = await this.$axios.post(
-          `${this.$config.pdfServiceURL}/generate`,
+          `${this.$config.pdfServiceURL}/reports/weekly`,
           payload
         );
 
@@ -1191,9 +1212,16 @@ export default {
         }
 
       } catch (error) {
-        // Show error message
+        // Show error message - use error code for translation if available
         this.pdfError = true;
-        this.pdfErrorMsg = error.response?.data?.error || this.$t('pdf_generation_failed');
+        const errorCode = error.response?.data?.code;
+        if (errorCode) {
+          // Try to get translated error message using error code
+          const translationKey = `pdf_error_${errorCode}`;
+          this.pdfErrorMsg = this.$t(translationKey);
+        } else {
+          this.pdfErrorMsg = this.$t('pdf_generation_failed');
+        }
         this.axiosError = true;
         this.axiosErrorMsg = this.pdfErrorMsg;
 

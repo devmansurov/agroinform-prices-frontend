@@ -290,6 +290,20 @@ export default async (context, locale) => {
     pdf_generation_failed: 'Failed to generate PDF. Please try again.',
     pdf_not_available: 'Complete the filters to generate PDF',
 
+    // PDF Error Codes (mapped from backend error codes)
+    pdf_error_VALIDATION_FAILED: 'Invalid request parameters. Please check your filters.',
+    pdf_error_MISSING_HASH: 'Download link is invalid.',
+    pdf_error_INVALID_HASH: 'Download link format is incorrect.',
+    pdf_error_PDF_GENERATION_FAILED: 'Failed to generate PDF. Please try again.',
+    pdf_error_PDF_PAGE_GENERATION_FAILED: 'Failed to generate PDF page. Please try again.',
+    pdf_error_PDF_MERGE_FAILED: 'Failed to combine PDF pages. Please try again.',
+    pdf_error_PDF_ALL_PAGES_FAILED: 'Failed to generate all PDF pages. Please try again.',
+    pdf_error_QUARTERLY_GENERATION_FAILED: 'Failed to generate quarterly report. Please try again.',
+    pdf_error_QUARTERLY_EMPTY_RESULT: 'Quarterly report could not be generated. Please try again.',
+    pdf_error_FILE_NOT_FOUND: 'PDF file not found. Please generate a new report.',
+    pdf_error_INTERNAL_ERROR: 'Server error occurred. Please try again later.',
+    pdf_error_NAVIGATION_TIMEOUT: 'Report generation timed out. Please try again.',
+
     // Import Changes Table
     quantity_short: 'q-ty',
     amount_short: 'amount',

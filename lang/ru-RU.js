@@ -293,6 +293,20 @@ export default async (context, locale) => {
     pdf_generation_failed: 'Не удалось создать PDF. Попробуйте еще раз.',
     pdf_not_available: 'Заполните фильтры для создания PDF',
 
+    // PDF Error Codes (mapped from backend error codes)
+    pdf_error_VALIDATION_FAILED: 'Неверные параметры запроса. Проверьте фильтры.',
+    pdf_error_MISSING_HASH: 'Ссылка для скачивания недействительна.',
+    pdf_error_INVALID_HASH: 'Неверный формат ссылки для скачивания.',
+    pdf_error_PDF_GENERATION_FAILED: 'Не удалось создать PDF. Попробуйте еще раз.',
+    pdf_error_PDF_PAGE_GENERATION_FAILED: 'Не удалось создать страницу PDF. Попробуйте еще раз.',
+    pdf_error_PDF_MERGE_FAILED: 'Не удалось объединить страницы PDF. Попробуйте еще раз.',
+    pdf_error_PDF_ALL_PAGES_FAILED: 'Не удалось создать все страницы PDF. Попробуйте еще раз.',
+    pdf_error_QUARTERLY_GENERATION_FAILED: 'Не удалось создать квартальный отчет. Попробуйте еще раз.',
+    pdf_error_QUARTERLY_EMPTY_RESULT: 'Квартальный отчет не может быть создан. Попробуйте еще раз.',
+    pdf_error_FILE_NOT_FOUND: 'Файл PDF не найден. Создайте новый отчет.',
+    pdf_error_INTERNAL_ERROR: 'Произошла ошибка сервера. Попробуйте позже.',
+    pdf_error_NAVIGATION_TIMEOUT: 'Время создания отчета истекло. Попробуйте еще раз.',
+
     // Import Changes Table
     quantity_short: 'кол-во',
     amount_short: 'сумма',

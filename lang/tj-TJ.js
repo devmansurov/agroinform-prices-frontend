@@ -291,6 +291,20 @@ export default async (context, locale) => {
     pdf_generation_failed: 'Эҷоди PDF ноком шуд. Лутфан дубора кӯшиш кунед.',
     pdf_not_available: 'Барои эҷоди PDF филтрҳоро пур кунед',
 
+    // PDF Error Codes (mapped from backend error codes)
+    pdf_error_VALIDATION_FAILED: 'Параметрҳои дархост нодуруст. Филтрҳоро тафтиш кунед.',
+    pdf_error_MISSING_HASH: 'Пайванди боргирӣ нодуруст аст.',
+    pdf_error_INVALID_HASH: 'Формати пайванди боргирӣ нодуруст аст.',
+    pdf_error_PDF_GENERATION_FAILED: 'Эҷоди PDF ноком шуд. Лутфан дубора кӯшиш кунед.',
+    pdf_error_PDF_PAGE_GENERATION_FAILED: 'Эҷоди саҳифаи PDF ноком шуд. Лутфан дубора кӯшиш кунед.',
+    pdf_error_PDF_MERGE_FAILED: 'Муттаҳидсозии саҳифаҳои PDF ноком шуд. Лутфан дубора кӯшиш кунед.',
+    pdf_error_PDF_ALL_PAGES_FAILED: 'Эҷоди ҳамаи саҳифаҳои PDF ноком шуд. Лутфан дубора кӯшиш кунед.',
+    pdf_error_QUARTERLY_GENERATION_FAILED: 'Эҷоди ҳисоботи семоҳа ноком шуд. Лутфан дубора кӯшиш кунед.',
+    pdf_error_QUARTERLY_EMPTY_RESULT: 'Ҳисоботи семоҳа эҷод карда нашуд. Лутфан дубора кӯшиш кунед.',
+    pdf_error_FILE_NOT_FOUND: 'Файли PDF ёфт нашуд. Ҳисоботи нав эҷод кунед.',
+    pdf_error_INTERNAL_ERROR: 'Хатои сервер рух дод. Баъдтар кӯшиш кунед.',
+    pdf_error_NAVIGATION_TIMEOUT: 'Вақти эҷоди ҳисобот гузашт. Лутфан дубора кӯшиш кунед.',
+
     // Import Changes Table
     quantity_short: 'миқдор',
     amount_short: 'маблағ',

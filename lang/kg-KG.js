@@ -240,6 +240,20 @@ export default async (context, locale) => {
     pdf_generation_failed: 'PDF түзүүдө ката кетти. Кайра аракет кылыңыз.',
     pdf_not_available: 'PDF түзүү үчүн фильтрлерди толтуруңуз',
 
+    // PDF Error Codes (mapped from backend error codes)
+    pdf_error_VALIDATION_FAILED: 'Суроо параметрлери туура эмес. Фильтрлерди текшериңиз.',
+    pdf_error_MISSING_HASH: 'Жүктөө шилтемеси жараксыз.',
+    pdf_error_INVALID_HASH: 'Жүктөө шилтемесинин форматы туура эмес.',
+    pdf_error_PDF_GENERATION_FAILED: 'PDF түзүүдө ката кетти. Кайра аракет кылыңыз.',
+    pdf_error_PDF_PAGE_GENERATION_FAILED: 'PDF барагын түзүүдө ката кетти. Кайра аракет кылыңыз.',
+    pdf_error_PDF_MERGE_FAILED: 'PDF барактарын бириктирүүдө ката кетти. Кайра аракет кылыңыз.',
+    pdf_error_PDF_ALL_PAGES_FAILED: 'Бардык PDF барактарын түзүүдө ката кетти. Кайра аракет кылыңыз.',
+    pdf_error_QUARTERLY_GENERATION_FAILED: 'Чейректик отчетту түзүүдө ката кетти. Кайра аракет кылыңыз.',
+    pdf_error_QUARTERLY_EMPTY_RESULT: 'Чейректик отчет түзүлбөй калды. Кайра аракет кылыңыз.',
+    pdf_error_FILE_NOT_FOUND: 'PDF файл табылган жок. Жаңы отчет түзүңүз.',
+    pdf_error_INTERNAL_ERROR: 'Сервер катасы болду. Кийинчерээк аракет кылыңыз.',
+    pdf_error_NAVIGATION_TIMEOUT: 'Отчет түзүү убактысы бүттү. Кайра аракет кылыңыз.',
+
     // Import Changes Table
     quantity_short: 'сан',
     amount_short: 'сумма',

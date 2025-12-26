@@ -100,7 +100,7 @@ export default {
       ? 'http://agroinform-prices-backend.test/api' // Local development backend
       : 'https://data.agroinform.asia/api', // Production API
     pdfServiceURL: process.env.NODE_ENV === 'development'
-      ? 'https://prices.agroinform.asia/api/pdf' // Local PDF service
+      ? 'http://localhost:3002' // Local PDF service
       : 'https://prices.agroinform.asia/api/pdf' // Production PDF service (via nginx proxy)
   },
 }
